@@ -2,11 +2,13 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Payment } from "@/data/payments.data";
-import { ColumnDef, SortDirection } from "@tanstack/react-table";
+import { ColumnDef, FilterFn, Row, SortDirection } from "@tanstack/react-table";
 
 import { ChevronDown, ChevronUp, MoreHorizontal } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,6 +18,22 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
+import { workAsyncStorage } from "next/dist/server/app-render/entry-base";
+
+const myCustomFilterFn: FilterFn<Payment> = (
+  row: Row<Payment>,
+  columnId: string,
+  filterValue: any,
+  addMeta: (meta: any) => void
+) => {
+  filterValue = filterValue.toLowerCase();
+  const filterParts = filterValue.split(" ");
+
+  const rowValues = `${row.original.clientName} ${row.original.email} ${row.original.status}`.toLowerCase();
+
+  return filterParts.every((part: string) => rowValues.includes(part));
+  
+};
 
 const SortedIcon = ({ isSorted }: { isSorted: false | SortDirection }) => {
   if (isSorted === "asc") {
@@ -31,6 +49,29 @@ const SortedIcon = ({ isSorted }: { isSorted: false | SortDirection }) => {
 // You can use a Zod schema here if you want.
 
 export const columns: ColumnDef<Payment>[] = [
+  {
+    id: "select",
+    header: ({ table }) => (
+      <Checkbox
+        checked={
+          table.getIsAllPageRowsSelected() ||
+          (table.getIsSomePageRowsSelected() && "indeterminate")
+        }
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        aria-label="Select all"
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        aria-label="Select row"
+      />
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
+
   {
     accessorKey: "clientName",
     header: ({ column }) => {
@@ -102,6 +143,7 @@ export const columns: ColumnDef<Payment>[] = [
   },
   {
     accessorKey: "email",
+    filterFn: myCustomFilterFn,
     header: ({ column }) => {
       return (
         <Button
