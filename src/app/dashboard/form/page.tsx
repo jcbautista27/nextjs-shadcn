@@ -13,24 +13,35 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 
-const formSchema = z.object({
-  username: z.string().min(2).max(20),
-  email: z.string().email(),
-  gender: z.enum(["Male", "Famale", "Other"], {
-    message: "Seleccione una opción",
-  }),
-  dateOfBirth: z.date({
-    required_error: "A date of birth is required.",
-  }),
-});
+const formSchema = z
+  .object({
+    username: z.string().min(2).max(20),
+    email: z.string().email(),
+    gender: z.enum(["male", "female", "other"], {
+      message: "Seleccione una opción",
+    }),
+    // dateOfBirth: z.date({
+    //   required_error: "A date of birth is required.",
+    // }),
+    marketing_emails: z.boolean().default(false),
+  })
+  .refine((data) => data.marketing_emails == true, {
+    message: "You must agree to receive marketing emails",
+    path: ["marketing_emails"],
+  });
 
 export default function Page() {
   // 1. Define your form.
@@ -41,6 +52,8 @@ export default function Page() {
       email: "",
     },
   });
+
+  console.log(form);
 
   // 2. Define a submit handler.
   function onSubmit(values: z.infer<typeof formSchema>) {
@@ -115,6 +128,13 @@ export default function Page() {
                       </FormControl>
                       <FormLabel className="font-normal">Female</FormLabel>
                     </FormItem>
+
+                    <FormItem className="flex items-center space-x-3 space-y-0">
+                      <FormControl>
+                        <RadioGroupItem value="other" />
+                      </FormControl>
+                      <FormLabel className="font-normal">Other</FormLabel>
+                    </FormItem>
                   </RadioGroup>
                 </FormControl>
                 <FormMessage />
@@ -123,7 +143,7 @@ export default function Page() {
           />
 
           {/* DatePicker */}
-          <FormField
+          {/* <FormField
             control={form.control}
             name="dateOfBirth"
             render={({ field }) => (
@@ -164,6 +184,29 @@ export default function Page() {
                   Your date of birth is used to calculate your age.
                 </FormDescription>
                 <FormMessage />
+              </FormItem>
+            )}
+          /> */}
+
+          {/* Marketing email switch */}
+
+          <FormField
+            control={form.control}
+            name="marketing_emails"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                <div className="space-y-0.5">
+                  <FormLabel>Marketing emails</FormLabel>
+                  <FormDescription>
+                    Receive emails about new products, features, and more.
+                  </FormDescription>
+                </div>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
               </FormItem>
             )}
           />
